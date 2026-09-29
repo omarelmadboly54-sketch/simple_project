@@ -1,7 +1,6 @@
 package configuration
 
 import (
-	"log"
 	"simple_project/internal/util"
 
 	"gorm.io/driver/postgres"
@@ -11,7 +10,7 @@ import (
 func InitPostgres() (*gorm.DB,error){
 	config,err:=util.LoadConfig(".")
 	if err!=nil{
-		log.Fatal("failed to load config:",err)
+		return nil,err
 	}
 	db, err := gorm.Open(postgres.Open(config.DBSource), &gorm.Config{})
 	if err!=nil{
