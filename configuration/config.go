@@ -7,15 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitPostgres() (*gorm.DB,error){
+func InitPostgres() (*gorm.DB,util.Config,error){
 	config,err:=util.LoadConfig(".")
 	if err!=nil{
-		return nil,err
+		return nil,util.Config{},err
 	}
 	db, err := gorm.Open(postgres.Open(config.DBSource), &gorm.Config{})
 	if err!=nil{
-		return nil,err
+		return nil,util.Config{},err
 	}
-	return db,nil
+	return db,config,nil
 }
 
