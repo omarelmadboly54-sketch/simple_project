@@ -1,24 +1,22 @@
 package configuration
 
-import "github.com/spf13/viper"
+import (
+	"log"
+	"simple_project/internal/util"
 
-type Config struct {
-	DBDriver      string `mapstructure:"DB_DRIVER"`
-	DBUrl         string `mapstructure:"DB_URL"`
-	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
-}
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
 
-func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env")
-	
-	viper.AutomaticEnv()
-
-	err=viper.ReadInConfig()
+func InitPostgres() (*gorm.DB,error){
+	config,err:=util.LoadConfig(".")
 	if err!=nil{
-		return
+		log.Fatal("failed to load config:",err)
 	}
-	err=viper.Unmarshal(&config)
-	return
+	db, err := gorm.Open(postgres.Open(config.DBSource), &gorm.Config{})
+	if err!=nil{
+		return nil,err
+	}
+	return db,nil
 }
+
