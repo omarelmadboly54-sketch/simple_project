@@ -6,6 +6,8 @@ import (
 	"simple_project/internal/controller"
 	"simple_project/internal/providers/postgres"
 	"simple_project/internal/service"
+	"simple_project/token"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,17 +20,23 @@ func main() {
 	}
 	log.Println("Database Connection Successfully")
 
+	tokenMaker,err:=token.NewJwtMaker(config.SecretKey)
+	if err!=nil{
+		log.Fatal("cannot create token maker:",err)
+	}
+	
+
+
 	r:=gin.Default()
 	
 	userRepo:=postgres.NewUserRepo(db)
-	userService:=service.NewUserService(userRepo)
+	tokenDuration:=time.Duration(config.AccessTokenMinutes)*time.Minute
+	userService:=service.NewUserService(userRepo,tokenMaker,tokenDuration)
 	userController:=controller.NewUserController(userService)
 	userController.Routes(r.Group("/api"))
 
 
-
-
-
+	
 	if err:=r.Run(config.ServerAddress);err!=nil{
 		log.Fatalf("failed to start server:%v",err)
 	}
