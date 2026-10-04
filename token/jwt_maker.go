@@ -7,33 +7,34 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-const minSecretKeySize = 32
+const minsecretkeysize=32
 
-type JWTMaker struct {
+type JWTMaker struct{
 	secretKey string
 }
 
-func NewJwtMaker(secretKey string) (Maker, error) {
-	if len(secretKey) < minSecretKeySize {
-		return nil, fmt.Errorf("invalid secret key size:must be at least%d characters",minSecretKeySize)
+func NewJwtMaker(secretKey string)(Maker,error){
+	if len(secretKey)<minsecretkeysize{
+		return nil,fmt.Errorf("Invalid SecretKey size must be at least:%d",minsecretkeysize)
 	}
 	return &JWTMaker{secretKey: secretKey},nil
 }
 
-func (maker *JWTMaker)CreateToken(email string,role string,duration time.Duration)(string,error){
-	payload,err:=NewPayload(email,role,duration)
+func (maker *JWTMaker)CreateToken(email string, role string, duration time.Duration)(string,error){
+	Payload,err:=NewPayload(email,role,duration)
 	if err!=nil{
 		return "",err
 	}
 	jwtToken:=jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{
-		"email":payload.Email,
-		"role":payload.Role,
-		"exp":payload.ExpiredAt.Unix(),
-		"iat":payload.IssuedAt.Unix(),
+		"email":Payload.Email,
+		"role":Payload.Role,
+		"exp":Payload.ExpiredAt.Unix(),
+		"iat":Payload.IssuedAt.Unix(),
 	})
-	return jwtToken.SignedString([]byte(maker.secretKey))
-
+	return jwtToken.SignedString([]byte(maker.secretKey)) 
 }
+
+
 
 func (maker *JWTMaker) VerifyToken(tokenString string) (*Payload, error) {
     token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
