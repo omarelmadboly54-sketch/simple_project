@@ -22,11 +22,8 @@ func main() {
 
 	tokenMaker,err:=token.NewJwtMaker(config.SecretKey)
 	if err!=nil{
-		log.Fatal("cannot create token maker:",err)
+		log.Fatal("failed to generate token maker:",err)
 	}
-	
-
-
 	r:=gin.Default()
 	
 	userRepo:=postgres.NewUserRepo(db)
@@ -36,11 +33,12 @@ func main() {
 	userController.Routes(r.Group("/api"))
 
 
-	
+
 	if err:=r.Run(config.ServerAddress);err!=nil{
 		log.Fatalf("failed to start server:%v",err)
 	}
 }
+
 
 
 
