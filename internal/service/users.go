@@ -22,8 +22,10 @@ type UserService interface{
 	CreateUser(user models.User)error
 	Login(email string,password string)(string,error)
 	Get_Users()(users []models.User,err error)
-	Get_User(id int64)(user models.User,err error)
+	Get_User(id int64)(user *models.User,err error)
 	Delete_User(id int64)error
+	Update_User_Role(id int64)(user *models.User ,err error)
+
 
 
 }
@@ -57,7 +59,7 @@ func(s *userService)Get_Users()(users []models.User,err error){
 	return s.UserRepo.Get_Users()
 }
 
-func(s *userService)Get_User(id int64)(user models.User,err error){
+func(s *userService)Get_User(id int64)(user *models.User,err error){
 	return s.UserRepo.Get_User(id)
 }
 
@@ -71,6 +73,16 @@ func(s *userService)Delete_User(id int64)error{
 	}
 	return nil	
  }
+
+ func(s *userService)Update_User_Role(id int64)(user *models.User ,err error){
+	// i nned to check if he/she is a user or not
+	user,err=s.UserRepo.Get_User(id)
+	if err!=nil{
+		return nil,err
+	}
+	return s.UserRepo.Update_User_Role(user.ID)
+ }
+
 
 
 func(s *userService)Login(email string,password string)(string,error){
