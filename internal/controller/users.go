@@ -36,6 +36,7 @@ func(ctl *userController) Routes(g *gin.RouterGroup){
 	g.GET("/users",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Get_Users)
 	g.GET("/users/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Get_User)
 	g.DELETE("/users/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Delete_User)
+	g.PATCH("/users/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Update_User_Role)
 
 }
 
@@ -108,9 +109,28 @@ func(ctl *userController)Delete_User(g *gin.Context){
 	})
 	return
 	}
-
-
 	g.JSON(http.StatusOK,gin.H{"ok":"ok"})
+}
+
+
+func(ctl *userController)Update_User_Role(g *gin.Context){
+	id,err:=strconv.ParseInt(g.Param("id"),10,64)
+	if err!=nil{
+		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
+	})
+	return
+	}
+	user,err:=ctl.UserService.Update_User_Role(id)
+	if err!=nil{
+		if errors.Is(err,gorm.ErrRecordNotFound){
+			g.JSON(http.StatusNotFound,gin.H{"error":"user not found"})
+			return
+		}
+		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
+	})
+	return
+	}
+	g.JSON(http.StatusOK,user)
 }
 
 
