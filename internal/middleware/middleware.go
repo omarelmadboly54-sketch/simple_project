@@ -50,3 +50,39 @@ func Authmiddleware(tokenMaker token.Maker)gin.HandlerFunc{
 	}
 }
 
+func RestrictTo(allowedRoles ...string) gin.HandlerFunc {
+    return func(ctx *gin.Context) {
+       
+        val, exists := ctx.Get(authorizationPayloadKey)
+        if !exists {
+            err := errors.New("authorization payload not found")
+            ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+            return
+        }
+
+        
+        payload, ok := val.(*token.Payload)
+        if !ok {
+            err := errors.New("invalid authorization payload type")
+            ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
+        }
+
+   
+        isAllowed := false
+        for _, role := range allowedRoles {
+            if payload.Role == role {
+                isAllowed = true
+                break
+            }
+        }
+
+        if !isAllowed {
+            err := errors.New("permission denied: insufficient permissions")
+            ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
+            return
+        }
+
+        ctx.Next()
+    }
+}

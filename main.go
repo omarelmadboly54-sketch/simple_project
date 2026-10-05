@@ -29,7 +29,7 @@ func main() {
 	userRepo:=postgres.NewUserRepo(db)
 	tokenDuration:=time.Duration(config.AccessTokenMinutes)*time.Minute
 	userService:=service.NewUserService(userRepo,tokenMaker,tokenDuration)
-	userController:=controller.NewUserController(userService)
+	userController:=controller.NewUserController(userService,tokenMaker)
 	userController.Routes(r.Group("/api"))
 
 
