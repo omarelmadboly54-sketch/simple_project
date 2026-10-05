@@ -5,6 +5,7 @@ import (
 	"simple_project/internal/repository"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type userRepo struct {
@@ -34,7 +35,7 @@ func (r *userRepo)Get_Users()(users []models.User,err error){
 	return users,nil
 }
 
-func (r *userRepo)Get_User(id int64)(user models.User,err error){
+func (r *userRepo)Get_User(id int64)(user*models.User,err error){
 	err = r.db.Where("id=?",id).First(&user).Error
 	return user,err
 }
@@ -47,6 +48,19 @@ func (r *userRepo)Get_User(id int64)(user models.User,err error){
  	}
  	return nil
  }
+
+  func (r *userRepo)Update_User_Role(id int64)(*models.User,error){
+	var user models.User
+	result:=r.db.Model(&user).Clauses(clause.Returning{}).Where("id=?",id).Update("role","admin")
+	if result.Error !=nil{
+		return nil,result.Error
+	}
+	return &user,nil
+  }
+
+
+
+
 
 
 
