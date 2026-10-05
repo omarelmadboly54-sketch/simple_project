@@ -14,6 +14,8 @@ type LoginRequest struct{
 	Password	string		`json:"password" binding:"required"`
 }
 
+
+
 func (c *CreateUserRequest) ToUser() models.User{
 	
 	return models.User{
