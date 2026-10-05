@@ -27,4 +27,31 @@ func (r *userRepo) Get_User_By_Email(email string)(user models.User,err error){
 	return user,err
 }
 
+func (r *userRepo)Get_Users()(users []models.User,err error){
+	if err:=r.db.Find(&users).Error;err!=nil{
+		return nil,err
+	}
+	return users,nil
+}
+
+func (r *userRepo)Get_User(id int64)(user models.User,err error){
+	err = r.db.Where("id=?",id).First(&user).Error
+	return user,err
+}
+
+
+ func (r *userRepo)Delete_user(id int64)error{
+ 	result:=r.db.Delete(&models.User{},id)
+ 	if result.Error!=nil{
+ 		return result.Error
+ 	}
+ 	return nil
+ }
+
+
+
+
+
+
+
 

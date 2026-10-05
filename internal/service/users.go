@@ -21,6 +21,11 @@ type userService struct {
 type UserService interface{
 	CreateUser(user models.User)error
 	Login(email string,password string)(string,error)
+	Get_Users()(users []models.User,err error)
+	Get_User(id int64)(user models.User,err error)
+	Delete_User(id int64)error
+
+
 }
 
 
@@ -46,6 +51,27 @@ func(s *userService) CreateUser(user models.User)error{
 	user.Password=hashedpassword
 	return s.UserRepo.CreateUser(&user)
 }
+
+func(s *userService)Get_Users()(users []models.User,err error){
+	//there is no logic here so we will return the users 
+	return s.UserRepo.Get_Users()
+}
+
+func(s *userService)Get_User(id int64)(user models.User,err error){
+	return s.UserRepo.Get_User(id)
+}
+
+func(s *userService)Delete_User(id int64)error{
+ 	user,err:=s.UserRepo.Get_User(id)
+	if err!=nil{
+		return err
+	}
+	if err:=s.UserRepo.Delete_user(user.ID);err!=nil{
+		return err
+	}
+	return nil	
+ }
+
 
 func(s *userService)Login(email string,password string)(string,error){
 	//we need first to check if he/she is a user or not
