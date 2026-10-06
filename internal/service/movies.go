@@ -16,7 +16,7 @@ type movieService struct {
 
 type MovieService interface{
 	CreateMovie(movie *models.Movie)error
-	Get_Movies()(movies []models.Movie,err error)
+	Get_Movies(genre string,page int,limit int)(movies []models.Movie,err error)
 	Get_Movie_By_ID(id int64)(movie *models.Movie,err error)
 	Delete_Movie(id int64)error
 }
@@ -34,8 +34,8 @@ func(s *movieService)CreateMovie(movie *models.Movie)error{
 	return s.movieRepo.CreateMovie(movie)
 }
 
-func(s *movieService)Get_Movies()(movies []models.Movie,err error){
-	return s.movieRepo.Get_Movies()
+func(s *movieService)Get_Movies(genre string,page int,limit int)(movies []models.Movie,err error){
+	return s.movieRepo.Get_Movies(genre,page,limit)
 }
 
 
