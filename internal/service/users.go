@@ -19,7 +19,7 @@ type userService struct {
 }
 
 type UserService interface{
-	CreateUser(user models.User)error
+	CreateUser(user *models.User)error
 	Login(email string,password string)(string,error)
 	Get_Users()(users []models.User,err error)
 	Get_User(id int64)(user *models.User,err error)
@@ -40,7 +40,7 @@ func NewUserService(UserRepo repository.UserRepo,tokenMaker token.Maker,tokenDur
 }
 
 
-func(s *userService) CreateUser(user models.User)error{
+func(s *userService) CreateUser(user *models.User)error{
 	_,err:=s.UserRepo.Get_User_By_Email(user.Email)
 	if err ==nil{
 		return errors.New("user already exist")	
@@ -51,7 +51,7 @@ func(s *userService) CreateUser(user models.User)error{
 	}
 
 	user.Password=hashedpassword
-	return s.UserRepo.CreateUser(&user)
+	return s.UserRepo.CreateUser(user)
 }
 
 func(s *userService)Get_Users()(users []models.User,err error){
