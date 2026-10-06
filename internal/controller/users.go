@@ -50,7 +50,7 @@ func(ctl *userController)CreateUser(g *gin.Context){
 	}
 	toUser:=req.ToUser()
 
-	err:=ctl.UserService.CreateUser(toUser)
+	err:=ctl.UserService.CreateUser(&toUser)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
 	})

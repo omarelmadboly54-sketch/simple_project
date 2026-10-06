@@ -20,7 +20,7 @@ func NewUserRepo(db *gorm.DB) repository.UserRepo{
 } 
 
 func (r *userRepo)CreateUser(user *models.User) error{
-	return r.db.Create(&user).Error	
+	return r.db.Create(user).Error	
 }
 
 func (r *userRepo) Get_User_By_Email(email string)(user models.User,err error){

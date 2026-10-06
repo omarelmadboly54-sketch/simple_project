@@ -32,6 +32,10 @@ func main() {
 	userController:=controller.NewUserController(userService,tokenMaker)
 	userController.Routes(r.Group("/api"))
 
+	movieRepo:=postgres.NewMovieRepo(db)
+	movieService:=service.NewMovieService(movieRepo,tokenMaker,tokenDuration)
+	movieController:=controller.NewMovieController(movieService,tokenMaker)
+	movieController.Routes(r.Group("/api"))
 
 
 	if err:=r.Run(config.ServerAddress);err!=nil{
