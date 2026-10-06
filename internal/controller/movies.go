@@ -58,7 +58,17 @@ func(ctl *movieController)Create_Movie(g *gin.Context){
 
 
 func(ctl *movieController)Get_Movies(g *gin.Context){
-	movies,err:=ctl.movieService.Get_Movies()
+	genre:=g.Query("genre")
+	page,_:=strconv.Atoi(g.DefaultQuery("page","1"))
+	if page<1{
+		page = 1
+	}
+	limit,_:=strconv.Atoi(g.DefaultQuery("limit","5"))
+	if limit <1{
+		limit=5
+	}
+
+	movies,err:=ctl.movieService.Get_Movies(genre,page,limit)
 	if err!=nil{
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})
