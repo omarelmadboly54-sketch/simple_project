@@ -32,8 +32,8 @@ func NewMovieController(movieService service.MovieService,tokenMaker token.Maker
 func(ctl *movieController)Routes(g *gin.RouterGroup){
 	g.POST("/movies",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Create_Movie)
 	g.DELETE("/movies/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Delete_Movie)
-	g.GET("/movies",middleware.Authmiddleware(ctl.tokenMaker),ctl.Get_Movies)
-	g.GET("/movies/:id",middleware.Authmiddleware(ctl.tokenMaker),ctl.Get_Movie_By_ID)
+	g.GET("/movies",ctl.Get_Movies)
+	g.GET("/movies/:id",ctl.Get_Movie_By_ID)
 }
 
 

@@ -49,13 +49,13 @@ func (r *userRepo)Get_User(id int64)(user*models.User,err error){
  	return nil
  }
 
-  func (r *userRepo)Update_User_Role(id int64)(*models.User,error){
-	var user models.User
+  func (r *userRepo)Update_User_Role(id int64)(user *models.User,err error){
+	// var user models.User
 	result:=r.db.Model(&user).Clauses(clause.Returning{}).Where("id=?",id).Update("role","admin")
 	if result.Error !=nil{
 		return nil,result.Error
 	}
-	return &user,nil
+	return user,nil
   }
 
 

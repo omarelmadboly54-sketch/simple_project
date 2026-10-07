@@ -20,7 +20,7 @@ func NewMovieRepo(db *gorm.DB)repository.MovieRepo{
 
 
 func(r *movieRepo)CreateMovie(movie *models.Movie)error{
-	result:=r.db.Create(movie)
+	result:=r.db.Create(&movie)
 	if result.Error!=nil{
 		return result.Error
 	}
