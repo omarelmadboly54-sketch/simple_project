@@ -32,8 +32,8 @@ func NewMovieController(movieService service.MovieService,tokenMaker token.Maker
 func(ctl *movieController)Routes(g *gin.RouterGroup){
 	g.POST("/movies",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Create_Movie)
 	g.DELETE("/movies/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Delete_Movie)
-	g.GET("/movies",middleware.Authmiddleware(ctl.tokenMaker),ctl.Get_Movies)
-	g.GET("/movies/:id",middleware.Authmiddleware(ctl.tokenMaker),ctl.Get_Movie_By_ID)
+	g.GET("/movies",ctl.Get_Movies)
+	g.GET("/movies/:id",ctl.Get_Movie_By_ID)
 }
 
 
@@ -58,7 +58,17 @@ func(ctl *movieController)Create_Movie(g *gin.Context){
 
 
 func(ctl *movieController)Get_Movies(g *gin.Context){
-	movies,err:=ctl.movieService.Get_Movies()
+	genre:=g.Query("genre")
+	page,_:=strconv.Atoi(g.DefaultQuery("page","1"))
+	if page<1{
+		page = 1
+	}
+	limit,_:=strconv.Atoi(g.DefaultQuery("limit","5"))
+	if limit <1{
+		limit=5
+	}
+
+	movies,err:=ctl.movieService.Get_Movies(genre,page,limit)
 	if err!=nil{
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})

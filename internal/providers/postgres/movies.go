@@ -20,17 +20,22 @@ func NewMovieRepo(db *gorm.DB)repository.MovieRepo{
 
 
 func(r *movieRepo)CreateMovie(movie *models.Movie)error{
-	result:=r.db.Create(movie)
+	result:=r.db.Create(&movie)
 	if result.Error!=nil{
 		return result.Error
 	}
 	return nil
 }
 
-func(r *movieRepo)Get_Movies()(movies []models.Movie,err error){
-	result:=r.db.Find(&movies)
-	if result.Error!=nil{
-		return nil,result.Error
+func(r *movieRepo)Get_Movies(genre string,page int,limit int)(movies []models.Movie,err error){
+	query:=r.db.Model(&movies)
+
+	if genre!=""{
+		query = query.Where("genre=?",genre)
+	}
+	offset:=(page-1)*limit
+	if err:=query.Limit(limit).Offset(offset).Find(&movies).Error;err!=nil{
+		return nil,err
 	}
 	return movies,nil
 }
