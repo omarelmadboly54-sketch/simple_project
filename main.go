@@ -25,17 +25,25 @@ func main() {
 		log.Fatal("failed to generate token maker:",err)
 	}
 	r:=gin.Default()
-	
+
+//users:
 	userRepo:=postgres.NewUserRepo(db)
 	tokenDuration:=time.Duration(config.AccessTokenMinutes)*time.Minute
 	userService:=service.NewUserService(userRepo,tokenMaker,tokenDuration)
 	userController:=controller.NewUserController(userService,tokenMaker)
 	userController.Routes(r.Group("/api"))
-
+//movies:
 	movieRepo:=postgres.NewMovieRepo(db)
 	movieService:=service.NewMovieService(movieRepo,tokenMaker,tokenDuration)
 	movieController:=controller.NewMovieController(movieService,tokenMaker)
 	movieController.Routes(r.Group("/api"))
+//showtime:
+	showtimeRepo:=postgres.NewShowTimeRepo(db)
+	showtimeService:=service.NewShowTimeService(showtimeRepo,tokenMaker,tokenDuration)
+	showtimeController:=controller.NewShowtimeController(showtimeService,tokenMaker)
+	showtimeController.Routes(r.Group("/api"))
+
+
 
 
 	if err:=r.Run(config.ServerAddress);err!=nil{
