@@ -11,6 +11,7 @@ import (
 
 type showtimeService struct {
 	showtimeRepo 	repository.ShowTime
+	seatRepo		repository.ShowTimeSeatsRepo
 	tokenMaker	 	token.Maker
 	tokenDuration	time.Duration
 }
@@ -24,16 +25,23 @@ type ShowTimeService interface{
 }
 
 
-func NewShowTimeService(showtimeRepo repository.ShowTime,tokenMaker token.Maker,tokenDuration time.Duration)ShowTimeService{
+func NewShowTimeService(showtimeRepo repository.ShowTime,seatRepo repository.ShowTimeSeatsRepo,tokenMaker token.Maker,tokenDuration time.Duration)ShowTimeService{
 	return &showtimeService{
 		showtimeRepo: showtimeRepo,
+		seatRepo: seatRepo,
 		tokenMaker: tokenMaker,
 		tokenDuration: tokenDuration,
 	}
 }
 
 func(s *showtimeService)Create_ShowTime(showtime *models.ShowTime) error{
-	return s.showtimeRepo.Create_ShowTime(showtime)
+	if err:= s.showtimeRepo.Create_ShowTime(showtime);err!=nil{
+		return err
+	}
+	if err:=s.seatRepo.GenerateSeatsForShowtime(showtime.ID);err!=nil{
+		return err
+	}
+	return nil
 
 }
 
