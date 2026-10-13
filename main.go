@@ -38,13 +38,16 @@ func main() {
 	movieController:=controller.NewMovieController(movieService,tokenMaker)
 	movieController.Routes(r.Group("/api"))
 //showtime:
+	seatRepo:=postgres.NewShowTimeSeatRepo(db)
 	showtimeRepo:=postgres.NewShowTimeRepo(db)
-	showtimeService:=service.NewShowTimeService(showtimeRepo,tokenMaker,tokenDuration)
+	showtimeService:=service.NewShowTimeService(showtimeRepo,seatRepo,tokenMaker,tokenDuration)
 	showtimeController:=controller.NewShowtimeController(showtimeService,tokenMaker)
 	showtimeController.Routes(r.Group("/api"))
 
-
-
+//showtime_seats:
+	seatService:=service.NewShowTimeSeatService(seatRepo,tokenMaker,tokenDuration)
+	seatController:=controller.NewShowTimeSeatContoller(seatService,tokenMaker)
+	seatController.Routes(r.Group("/api"))
 
 	if err:=r.Run(config.ServerAddress);err!=nil{
 		log.Fatalf("failed to start server:%v",err)
