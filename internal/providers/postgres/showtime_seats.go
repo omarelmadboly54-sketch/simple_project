@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"fmt"
 	"simple_project/internal/models"
 	"simple_project/internal/repository"
@@ -50,4 +51,24 @@ func(r *showtimeseatsRepo)Get_Seats(showtime_id int64) (seats []models.ShowtimeS
 			return nil,err
 		}
 		return seats,nil
+}
+
+
+func(r *showtimeseatsRepo)Book_seat(seat_id int64,user_id int64)error{
+	result:=r.db.Model(&models.ShowtimeSeats{}).
+	Where("id=? AND status =?",seat_id,"available").
+	Updates(map[string]interface{}{
+		"status":"booked",
+		"user_id":user_id,
+	})
+
+	if result.Error!=nil{
+		return result.Error
+	}
+
+	if result.RowsAffected==0{
+		return errors.New("seat is already booked")
+	}
+	return nil
+
 }
