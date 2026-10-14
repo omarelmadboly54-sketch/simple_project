@@ -86,3 +86,12 @@ func RestrictTo(allowedRoles ...string) gin.HandlerFunc {
         ctx.Next()
     }
 }
+
+func GetTokenPayload(g *gin.Context)(*token.Payload, bool){
+	val,exists:=g.Get("authorization_payload")
+	if !exists{
+		return nil,false
+	}
+	payload,ok:=val.(*token.Payload)
+	return payload,ok
+}

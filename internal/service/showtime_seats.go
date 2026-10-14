@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"simple_project/internal/presenters"
 	"simple_project/internal/repository"
 	"simple_project/token"
@@ -15,6 +16,7 @@ type showtimeseatService struct {
 
 type ShowTimeSeatService interface{
 	Get_Seats(showtime_id int64) ([]presenters.SeatResponse,error)
+	Book_seat(seat_id int64,user_id int64)error
 }
 
 
@@ -43,3 +45,13 @@ func(s *showtimeseatService)Get_Seats(showtime_id int64) ([]presenters.SeatRespo
 	return response,nil
 }
 
+func(s *showtimeseatService)Book_seat(seat_id int64,user_id int64)error{
+	 err:=s.showtimeseatsRepo.Book_seat(seat_id,user_id)
+	 if err!=nil{
+		if err.Error()=="seat is already booked"{
+			return errors.New("Conflict:this seat is no longer available")
+		}
+		return err
+	 }
+	 return nil
+}

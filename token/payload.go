@@ -13,14 +13,16 @@ var (
 type Payload struct{
 	Email		string		`json:"email"`
 	Role		string		`json:"role"`
+	UserID		int64		`json:"user_id"`
 	IssuedAt	time.Time	`json:"issued_at"`
-	ExpiredAt	time.Time	`json:"expred_at"`
+	ExpiredAt	time.Time	`json:"expired_at"`
 }
 
-func NewPayload(email string,role string,duration time.Duration)(*Payload,error){
+func NewPayload(userID int64,email string,role string,duration time.Duration)(*Payload,error){
 	payload:= &Payload{
 		Email:email ,
 		Role: role,
+		UserID:userID,
 		IssuedAt: time.Now(),
 		ExpiredAt: time.Now().Add(duration),
 	}

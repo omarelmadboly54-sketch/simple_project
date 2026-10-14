@@ -20,14 +20,15 @@ func NewJwtMaker(secretKey string)(Maker,error){
 	return &JWTMaker{secretKey: secretKey},nil
 }
 
-func (maker *JWTMaker)CreateToken(email string, role string, duration time.Duration)(string,error){
-	Payload,err:=NewPayload(email,role,duration)
+func (maker *JWTMaker)CreateToken(userID int64,email string, role string, duration time.Duration)(string,error){
+	Payload,err:=NewPayload(userID,email,role,duration)
 	if err!=nil{
 		return "",err
 	}
 	jwtToken:=jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{
 		"email":Payload.Email,
 		"role":Payload.Role,
+        "user_id":Payload.UserID,
 		"exp":Payload.ExpiredAt.Unix(),
 		"iat":Payload.IssuedAt.Unix(),
 	})
@@ -53,8 +54,16 @@ func (maker *JWTMaker) VerifyToken(tokenString string) (*Payload, error) {
         return nil, ErrInvalidToken
     }
 
+    userIDFloat, ok := claims["user_id"].(float64)
+    if !ok {
+        return nil, ErrInvalidToken
+    }
+    userID := int64(userIDFloat)
+
     email, _ := claims["email"].(string)
     role, _ := claims["role"].(string)
+  
+    
     
     expFloat, ok := claims["exp"].(float64)
     if !ok {
@@ -67,6 +76,7 @@ func (maker *JWTMaker) VerifyToken(tokenString string) (*Payload, error) {
     }
 
     return &Payload{
+        UserID: userID,
         Email:     email,
         Role:      role,
         ExpiredAt: expiredAt,

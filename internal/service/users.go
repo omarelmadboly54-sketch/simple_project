@@ -99,7 +99,7 @@ func(s *userService)Login(email string,password string)(string,error){
 	}
 	// after checking the user,email we need to create tokens
 
-	accessToken,err:=s.tokenMaker.CreateToken(user.Email,user.Role,s.tokenDuration)
+	accessToken,err:=s.tokenMaker.CreateToken(user.ID,user.Email,user.Role,s.tokenDuration)
 	if err!=nil{
 		return "",fmt.Errorf("failed to generate tokens")
 	}
