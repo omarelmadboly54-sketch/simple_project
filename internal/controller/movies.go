@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"net/http"
+	"simple_project/internal/apperrors"
 	"simple_project/internal/middleware"
 	"simple_project/internal/presenters"
 	"simple_project/internal/service"
@@ -19,7 +20,7 @@ type movieController struct {
 }
 
 type MovieController interface{
-	Routes(g *gin.RouterGroup)
+	RegisterRoutes(g *gin.RouterGroup)
 }
 
 func NewMovieController(movieService service.MovieService,tokenMaker token.Maker)MovieController{
@@ -29,24 +30,24 @@ func NewMovieController(movieService service.MovieService,tokenMaker token.Maker
 	}
 }
 
-func(ctl *movieController)Routes(g *gin.RouterGroup){
-	g.POST("/movies",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Create_Movie)
-	g.DELETE("/movies/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Delete_Movie)
-	g.GET("/movies",ctl.Get_Movies)
-	g.GET("/movies/:id",ctl.Get_Movie_By_ID)
+func(ctl *movieController)RegisterRoutes(g *gin.RouterGroup){
+	g.POST("/movies",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.CreateMovie)
+	g.DELETE("/movies/:id",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.DeleteMovie)
+	g.GET("/movies",ctl.GetAll)
+	g.GET("/movies/:id",ctl.GetMovieByID)
 }
 
 
-func(ctl *movieController)Create_Movie(g *gin.Context){
+func(ctl *movieController)CreateMovie(g *gin.Context){
 	req:=presenters.CreateMovieReq{}
 	if err:=g.ShouldBindJSON(&req);err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
 	})
 	return
 	}
-	to_movie:=req.ToMovie()
+	toMovie:=req.ToMovie()
 
-	err:=ctl.movieService.CreateMovie(&to_movie)
+	err:=ctl.movieService.CreateMovie(&toMovie)
 	if err!=nil{
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})
@@ -57,7 +58,7 @@ func(ctl *movieController)Create_Movie(g *gin.Context){
 }
 
 
-func(ctl *movieController)Get_Movies(g *gin.Context){
+func(ctl *movieController)GetAll(g *gin.Context){
 	genre:=g.Query("genre")
 	page,_:=strconv.Atoi(g.DefaultQuery("page","1"))
 	if page<1{
@@ -68,7 +69,7 @@ func(ctl *movieController)Get_Movies(g *gin.Context){
 		limit=5
 	}
 
-	movies,err:=ctl.movieService.Get_Movies(genre,page,limit)
+	movies,err:=ctl.movieService.GetAll(genre,page,limit)
 	if err!=nil{
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})
@@ -77,19 +78,18 @@ func(ctl *movieController)Get_Movies(g *gin.Context){
 	g.JSON(http.StatusOK,movies)
 }
 
-func(ctl *movieController)Get_Movie_By_ID(g *gin.Context){
+func(ctl *movieController)GetMovieByID(g *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
 	})
 	return
 	}
-	movie,err:=ctl.movieService.Get_Movie_By_ID(id)
+	movie,err:=ctl.movieService.GetMovieByID(id)
 	if err!=nil{
 		if errors.Is(err,gorm.ErrRecordNotFound){
-			g.JSON(http.StatusNotFound,gin.H{"error":err.Error(),
-		})
-		return
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrMovieNotFound.Error()})
+			return
 		}
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})
@@ -98,19 +98,18 @@ func(ctl *movieController)Get_Movie_By_ID(g *gin.Context){
 	g.JSON(http.StatusOK,&movie)
 }
 
-func(ctl *movieController)Delete_Movie(g *gin.Context){
+func(ctl *movieController)DeleteMovie(g *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
 	})
 	return
 	}
-	err=ctl.movieService.Delete_Movie(id)
+	err=ctl.movieService.DeleteMovie(id)
 	if err!=nil{
 		if errors.Is(err,gorm.ErrRecordNotFound){
-			g.JSON(http.StatusNotFound,gin.H{"error":err.Error(),
-		})
-		return
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrMovieNotFound.Error()})
+			return
 		}
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})

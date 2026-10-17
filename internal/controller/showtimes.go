@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"net/http"
+	"simple_project/internal/apperrors"
 	"simple_project/internal/middleware"
 	"simple_project/internal/presenters"
 	"simple_project/internal/service"
@@ -19,7 +20,7 @@ type showtimeController struct {
 }
 
 type ShowTimeController interface{
-	Routes(g *gin.RouterGroup)
+	RegisterRoutes(g *gin.RouterGroup)
 }
 
 func NewShowtimeController(showtimeService service.ShowTimeService,tokenMaker token.Maker)ShowTimeController{
@@ -29,15 +30,15 @@ func NewShowtimeController(showtimeService service.ShowTimeService,tokenMaker to
 	}
 }
 
-func(ctl *showtimeController)Routes(g *gin.RouterGroup){
-	g.POST("/showtimes",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Create_showtime)
-	g.GET("/showtimes",ctl.Get_showtimes)
-	g.GET("/showtimes/:id",ctl.Get_Showtime)
-	g.DELETE("/showtimes/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Delete_showtime)
-	g.PATCH("/showtimes/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Update_showtime)
+func(ctl *showtimeController)RegisterRoutes(g *gin.RouterGroup){
+	g.POST("/showtimes",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.CreateShowTime)
+	g.GET("/showtimes",ctl.GetAll)
+	g.GET("/showtimes/:id",ctl.GetShowTime)
+	g.DELETE("/showtimes/:id",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.DeleteShowTime)
+	g.PATCH("/showtimes/:id",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.UpdateShowTime)
 }
 
-func(ctl *showtimeController)Create_showtime(g *gin.Context){
+func(ctl *showtimeController)CreateShowTime(g *gin.Context){
 	req:=presenters.CreateShowTimeReq{}
 
 	if err:=g.ShouldBindJSON(&req);err!=nil{
@@ -45,8 +46,8 @@ func(ctl *showtimeController)Create_showtime(g *gin.Context){
 	})
 	return
 	}
-	to_showtime:=req.ToShowTime()
-	err:=ctl.showtimeService.Create_ShowTime(&to_showtime)
+	toShowTime:=req.ToShowTime()
+	err:=ctl.showtimeService.CreateShowTime(&toShowTime)
 	if err!=nil{
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})
@@ -55,9 +56,9 @@ func(ctl *showtimeController)Create_showtime(g *gin.Context){
 	g.JSON(http.StatusCreated,gin.H{"ok":"ok"})
 }
 
-func(ctl *showtimeController)Get_showtimes(g *gin.Context){
+func(ctl *showtimeController)GetAll(g *gin.Context){
 	
-	showtimes,err:=ctl.showtimeService.Get_showtimes()
+	showtimes,err:=ctl.showtimeService.GetAll()
 	if err!=nil{
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})
@@ -67,19 +68,18 @@ func(ctl *showtimeController)Get_showtimes(g *gin.Context){
 }
 
 
-func(ctl *showtimeController)Get_Showtime(g *gin.Context){
+func(ctl *showtimeController)GetShowTime(g *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!= nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
 	})
 	return
 	}
-	showtime,err:=ctl.showtimeService.Get_showtime(id)
+	showtime,err:=ctl.showtimeService.GetShowTime(id)
 	if err!=nil{
 		if errors.Is(err,gorm.ErrRecordNotFound){
-			g.JSON(http.StatusNotFound,gin.H{"error":err.Error(),
-		})
-		return
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrShowtimeNotFound.Error()})
+			return
 		}
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
 	})
@@ -90,18 +90,17 @@ func(ctl *showtimeController)Get_Showtime(g *gin.Context){
 }
 
 
-func(ctl *showtimeController)Delete_showtime(g  *gin.Context){
+func(ctl *showtimeController)DeleteShowTime(g  *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
 	})
 	return
 	}
-	err = ctl.showtimeService.Delete_showtime(id)
+	err = ctl.showtimeService.DeleteShowTime(id)
 	if err!=nil{
 		if errors.Is(err,gorm.ErrRecordNotFound){
-			g.JSON(http.StatusNotFound,gin.H{"error":err.Error(),
-		})
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrShowtimeNotFound.Error()})
 		return
 		}
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
@@ -113,7 +112,7 @@ func(ctl *showtimeController)Delete_showtime(g  *gin.Context){
 }
 
 
-func(ctl *showtimeController)Update_showtime(g *gin.Context){
+func(ctl *showtimeController)UpdateShowTime(g *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
@@ -128,16 +127,14 @@ func(ctl *showtimeController)Update_showtime(g *gin.Context){
 	return
 	}
 
-	err=ctl.showtimeService.Update_showtime(id,&req)
+	err=ctl.showtimeService.UpdateShowTime(id,&req)
 	if err!=nil{
 		if err.Error() == "record not found"{
-			g.JSON(http.StatusNotFound,gin.H{"error":"showtime not found",
-		})
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrShowtimeNotFound.Error()})
 		return
 		}
 		if err.Error()== "hall is already booked at this time slot"{
-			g.JSON(http.StatusConflict,gin.H{"error":err.Error(),
-		})
+			g.JSON(http.StatusConflict,gin.H{"error":apperrors.ErrHallAlreadyBooked.Error()})
 		return
 		}
 

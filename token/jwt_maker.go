@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const minsecretkeysize=32
@@ -13,7 +13,7 @@ type JWTMaker struct{
 	secretKey string
 }
 
-func NewJwtMaker(secretKey string)(Maker,error){
+func NewJWTMaker(secretKey string)(Maker,error){
 	if len(secretKey)<minsecretkeysize{
 		return nil,fmt.Errorf("Invalid SecretKey size must be at least:%d",minsecretkeysize)
 	}

@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"net/http"
+	"simple_project/internal/apperrors"
 	"simple_project/internal/middleware"
 	"simple_project/internal/presenters"
 	"simple_project/internal/service"
@@ -19,7 +20,7 @@ type userController struct {
 }
 
 type UserController interface{
-	Routes(g *gin.RouterGroup)
+	RegisterRoutes(g *gin.RouterGroup)
 }
 
 func NewUserController(UserService service.UserService,tokenMaker token.Maker)UserController{
@@ -29,14 +30,14 @@ func NewUserController(UserService service.UserService,tokenMaker token.Maker)Us
 	}
 }
 
-func(ctl *userController) Routes(g *gin.RouterGroup){
+func(ctl *userController) RegisterRoutes(g *gin.RouterGroup){
 	g.POST("/users",ctl.CreateUser)
 	g.POST("/login",ctl.Login)
 	
-	g.GET("/users",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Get_Users)
-	g.GET("/users/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Get_User)
-	g.DELETE("/users/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Delete_User)
-	g.PATCH("/users/:id",middleware.Authmiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.Update_User_Role)
+	g.GET("/users",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.GetAll)
+	g.GET("/users/:id",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.GetUser)
+	g.DELETE("/users/:id",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.DeleteUser)
+	g.PATCH("/users/:id",middleware.AuthMiddleware(ctl.tokenMaker),middleware.RestrictTo("admin"),ctl.UpdateUserRole)
 
 }
 
@@ -61,8 +62,8 @@ func(ctl *userController)CreateUser(g *gin.Context){
 	})
 }
 
-func(ctl *userController)Get_Users(g *gin.Context){
-	users,err:=ctl.UserService.Get_Users()
+func(ctl *userController)GetAll(g *gin.Context){
+	users,err:=ctl.UserService.GetAll()
 	if err !=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error()})
 		return
@@ -71,17 +72,17 @@ func(ctl *userController)Get_Users(g *gin.Context){
 
 }
 
-func(ctl *userController)Get_User(g *gin.Context){
+func(ctl *userController)GetUser(g *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":"invalid user id",
 	})
 	return
 	}
-	user,err:=ctl.UserService.Get_User(id)
+	user,err:=ctl.UserService.GetUser(id)
 	if err!= nil{
 		if errors.Is(err,gorm.ErrRecordNotFound){
-			g.JSON(http.StatusNotFound,gin.H{"error":"user not found"})
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrUserNotFound.Error()})
 			return
 		}
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
@@ -93,16 +94,16 @@ func(ctl *userController)Get_User(g *gin.Context){
 
 }
 
-func(ctl *userController)Delete_User(g *gin.Context){
+func(ctl *userController)DeleteUser(g *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":"invalid user id"})
 	return
 	}
-	err=ctl.UserService.Delete_User(id)
+	err=ctl.UserService.DeleteUser(id)
 	if err!= nil{
 		if errors.Is(err,gorm.ErrRecordNotFound){
-			g.JSON(http.StatusNotFound,gin.H{"error":"user not found"})
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrUserNotFound.Error()})
 			return
 		}
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),
@@ -113,17 +114,17 @@ func(ctl *userController)Delete_User(g *gin.Context){
 }
 
 
-func(ctl *userController)Update_User_Role(g *gin.Context){
+func(ctl *userController)UpdateUserRole(g *gin.Context){
 	id,err:=strconv.ParseInt(g.Param("id"),10,64)
 	if err!=nil{
 		g.JSON(http.StatusBadRequest,gin.H{"error":err.Error(),
 	})
 	return
 	}
-	user,err:=ctl.UserService.Update_User_Role(id)
+	user,err:=ctl.UserService.UpdateUserRole(id)
 	if err!=nil{
 		if errors.Is(err,gorm.ErrRecordNotFound){
-			g.JSON(http.StatusNotFound,gin.H{"error":"user not found"})
+			g.JSON(http.StatusNotFound,gin.H{"error":apperrors.ErrUserNotFound.Error()})
 			return
 		}
 		g.JSON(http.StatusInternalServerError,gin.H{"error":err.Error(),

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"errors"
 	"fmt"
+	"simple_project/internal/apperrors"
 	"simple_project/internal/models"
 	"simple_project/internal/repository"
 	"simple_project/internal/util"
@@ -13,7 +13,7 @@ import (
 
 
 type userService struct {
-	UserRepo 		repository.UserRepo
+	UserRepo 		repository.UserRepository
 	tokenMaker		token.Maker
 	tokenDuration	time.Duration
 }
@@ -21,17 +21,14 @@ type userService struct {
 type UserService interface{
 	CreateUser(user *models.User)error
 	Login(email string,password string)(string,error)
-	Get_Users()(users []models.User,err error)
-	Get_User(id int64)(user *models.User,err error)
-	Delete_User(id int64)error
-	Update_User_Role(id int64)(user *models.User ,err error)
-
-
-
+	GetAll()(users []models.User,err error)
+	GetUser(id int64)(user *models.User,err error)
+	DeleteUser(id int64)error
+	UpdateUserRole(id int64)(user *models.User ,err error)
 }
 
 
-func NewUserService(UserRepo repository.UserRepo,tokenMaker token.Maker,tokenDuration time.Duration)UserService{
+func NewUserService(UserRepo repository.UserRepository,tokenMaker token.Maker,tokenDuration time.Duration)UserService{
 	return &userService{
 		UserRepo:UserRepo,
 		tokenMaker:tokenMaker,
@@ -41,9 +38,9 @@ func NewUserService(UserRepo repository.UserRepo,tokenMaker token.Maker,tokenDur
 
 
 func(s *userService) CreateUser(user *models.User)error{
-	_,err:=s.UserRepo.Get_User_By_Email(user.Email)
+	_,err:=s.UserRepo.GetUserByEmail(user.Email)
 	if err ==nil{
-		return errors.New("user already exist")	
+		return apperrors.ErrUserAlreadyExists	
 	}
 	hashedpassword,err:=util.HashPassword(user.Password)
 	if err!=nil{
@@ -54,48 +51,48 @@ func(s *userService) CreateUser(user *models.User)error{
 	return s.UserRepo.CreateUser(user)
 }
 
-func(s *userService)Get_Users()(users []models.User,err error){
+func(s *userService)GetAll()(users []models.User,err error){
 	//there is no logic here so we will return the users 
-	return s.UserRepo.Get_Users()
+	return s.UserRepo.GetAll()
 }
 
-func(s *userService)Get_User(id int64)(user *models.User,err error){
-	return s.UserRepo.Get_User(id)
+func(s *userService)GetUser(id int64)(user *models.User,err error){
+	return s.UserRepo.GetUser(id)
 }
 
-func(s *userService)Delete_User(id int64)error{
- 	user,err:=s.UserRepo.Get_User(id)
+func(s *userService)DeleteUser(id int64)error{
+ 	user,err:=s.UserRepo.GetUser(id)
 	if err!=nil{
 		return err
 	}
-	if err:=s.UserRepo.Delete_user(user.ID);err!=nil{
+	if err:=s.UserRepo.DeleteUser(user.ID);err!=nil{
 		return err
 	}
 	return nil	
  }
 
- func(s *userService)Update_User_Role(id int64)(user *models.User ,err error){
+ func(s *userService)UpdateUserRole(id int64)(user *models.User ,err error){
 	// i nned to check if he/she is a user or not
-	user,err=s.UserRepo.Get_User(id)
+	user,err=s.UserRepo.GetUser(id)
 	if err!=nil{
 		return nil,err
 	}
-	return s.UserRepo.Update_User_Role(user.ID)
+	return s.UserRepo.UpdateUserRole(user.ID)
  }
 
 
 
 func(s *userService)Login(email string,password string)(string,error){
 	//we need first to check if he/she is a user or not
-	user,err:=s.UserRepo.Get_User_By_Email(email)
+	user,err:=s.UserRepo.GetUserByEmail(email)
 	if err!=nil{
-		return "",fmt.Errorf("invalid credentials")
+		return "",apperrors.ErrInvalidCredentials
 	}
 
 	//so if he/she is a user we need to check password 
-	err=util.VerfiyPassword(user.Password,password)
+	err=util.VerifyPassword(user.Password,password)
 	if err!=nil{
-		return "",fmt.Errorf("invalid credentials")
+		return "",apperrors.ErrInvalidCredentials
 	}
 	// after checking the user,email we need to create tokens
 
