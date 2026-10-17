@@ -2,35 +2,33 @@ package service
 
 import (
 	"errors"
+	"simple_project/internal/apperrors"
+	"simple_project/internal/models"
 	"simple_project/internal/presenters"
 	"simple_project/internal/repository"
-	"simple_project/token"
-	"time"
 )
 
 type showtimeseatService struct {
-	showtimeseatsRepo repository.ShowTimeSeatsRepo
-	tokenMaker token.Maker
-	tokenDuration time.Duration
+	showtimeseatsRepo repository.ShowTimeSeatsRepository
 }
 
 type ShowTimeSeatService interface{
-	Get_Seats(showtime_id int64) ([]presenters.SeatResponse,error)
-	Book_seat(seat_id int64,user_id int64)error
+	GetAll(showtime_id int64) ([]presenters.SeatResponse,error)
+	BookSeat(seat_id int64,user_id int64)error
+	GetSeatById(seat_id int64,showtime_id int64) (seat *models.ShowtimeSeats, err error)
 }
 
 
-func NewShowTimeSeatService(showtimeseatsrepo repository.ShowTimeSeatsRepo,tokenMaker token.Maker,tokenDuration time.Duration) ShowTimeSeatService{
+func NewShowTimeSeatService(showtimeseatsrepo repository.ShowTimeSeatsRepository) ShowTimeSeatService{
 	return &showtimeseatService{
 		showtimeseatsRepo: showtimeseatsrepo,
-		tokenMaker: tokenMaker,
-		tokenDuration: tokenDuration,
+		
 	}
 }
 
-func(s *showtimeseatService)Get_Seats(showtime_id int64) ([]presenters.SeatResponse,error){
+func(s *showtimeseatService)GetAll(showtime_id int64) ([]presenters.SeatResponse,error){
 	
-	seats,err:=s.showtimeseatsRepo.Get_Seats(showtime_id)
+	seats,err:=s.showtimeseatsRepo.GetAll(showtime_id)
 	if err!=nil{
 		return nil,err
 	}
@@ -45,10 +43,17 @@ func(s *showtimeseatService)Get_Seats(showtime_id int64) ([]presenters.SeatRespo
 	return response,nil
 }
 
-func(s *showtimeseatService)Book_seat(seat_id int64,user_id int64)error{
-	 err:=s.showtimeseatsRepo.Book_seat(seat_id,user_id)
+func(s *showtimeseatService)GetSeatById(seat_id int64,showtime_id int64) (seat *models.ShowtimeSeats, err error){
+	return s.showtimeseatsRepo.GetSeatById(seat_id,showtime_id)
+}
+
+
+
+
+func(s *showtimeseatService)BookSeat(seat_id int64,user_id int64)error{
+	 err:=s.showtimeseatsRepo.BookSeat(seat_id,user_id)
 	 if err!=nil{
-		if err.Error()=="seat is already booked"{
+		if err.Error()==apperrors.ErrSeatAlreadyBooked.Error(){
 			return errors.New("Conflict:this seat is no longer available")
 		}
 		return err

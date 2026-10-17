@@ -5,13 +5,13 @@ import (
 	"time"
 )
 
-type ShowTime interface {
-	Create_ShowTime(showtime *models.ShowTime) error
-	Get_showtimes()(showtimes []models.ShowTime,err error)
-	Get_showtime(id int64)(showtime *models.ShowTime,err error)
-	Delete_showtime (id int64)error
+type ShowTimeRepository interface {
+	CreateShowTime(showtime *models.ShowTime) error
+	GetAll()(showtimes []models.ShowTime,err error)
+	GetShowTime(id int64)(showtime *models.ShowTime,err error)
+	DeleteShowTime (id int64)error
 	CheckHallConflict(hallnumber int,showtime time.Time,exludeID int64)(bool,error)
-	Update_showtime(showtime *models.ShowTime)error
+	UpdateShowTime(showtime *models.ShowTime)error
 }
 
 

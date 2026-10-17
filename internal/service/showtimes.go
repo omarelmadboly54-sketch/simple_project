@@ -1,75 +1,70 @@
 package service
 
 import (
-	"errors"
+	"simple_project/internal/apperrors"
 	"simple_project/internal/models"
 	"simple_project/internal/presenters"
 	"simple_project/internal/repository"
-	"simple_project/token"
-	"time"
 )
 
 type showtimeService struct {
-	showtimeRepo 	repository.ShowTime
-	seatRepo		repository.ShowTimeSeatsRepo
-	tokenMaker	 	token.Maker
-	tokenDuration	time.Duration
+	showtimeRepo 	repository.ShowTimeRepository
+	seatRepo		repository.ShowTimeSeatsRepository
+	
 }
 
 type ShowTimeService interface{
-	Create_ShowTime(showtime *models.ShowTime) error
-	Get_showtimes()(showtimes []models.ShowTime,err error)
-	Get_showtime(id int64)(showtime *models.ShowTime,err error)
-	Delete_showtime (id int64)error
-	Update_showtime(id int64,req *presenters.UpdateShowTimeReq)error
+	CreateShowTime(showtime *models.ShowTime) error
+	GetAll()(showtimes []models.ShowTime,err error)
+	GetShowTime(id int64)(showtime *models.ShowTime,err error)
+	DeleteShowTime (id int64)error
+	UpdateShowTime(id int64,req *presenters.UpdateShowTimeReq)error
 }
 
 
-func NewShowTimeService(showtimeRepo repository.ShowTime,seatRepo repository.ShowTimeSeatsRepo,tokenMaker token.Maker,tokenDuration time.Duration)ShowTimeService{
+func NewShowTimeService(showtimeRepo repository.ShowTimeRepository,seatRepo repository.ShowTimeSeatsRepository)ShowTimeService{
 	return &showtimeService{
 		showtimeRepo: showtimeRepo,
 		seatRepo: seatRepo,
-		tokenMaker: tokenMaker,
-		tokenDuration: tokenDuration,
 	}
 }
 
-func(s *showtimeService)Create_ShowTime(showtime *models.ShowTime) error{
-	if err:= s.showtimeRepo.Create_ShowTime(showtime);err!=nil{
+func(s *showtimeService)CreateShowTime(showtime *models.ShowTime) error{
+	if err:= s.showtimeRepo.CreateShowTime(showtime);err!=nil{
 		return err
 	}
-	if err:=s.seatRepo.GenerateSeatsForShowtime(showtime.ID);err!=nil{
+	if err:=s.seatRepo.GenerateSeatsForShowTime(showtime.ID);err!=nil{
 		return err
 	}
 	return nil
 
 }
 
-func(s *showtimeService)Get_showtimes()(showtimes []models.ShowTime,err error){
-	return s.showtimeRepo.Get_showtimes()
+func(s *showtimeService)GetAll()(showtimes []models.ShowTime,err error){
+	return s.showtimeRepo.GetAll()
 }
 
-func(s *showtimeService)Get_showtime(id int64)(showtime *models.ShowTime,err error){
-	return s.showtimeRepo.Get_showtime(id)
+func(s *showtimeService)GetShowTime(id int64)(showtime *models.ShowTime,err error){
+	return s.showtimeRepo.GetShowTime(id)
 }
 
 
-func(s *showtimeService)Delete_showtime (id int64)error{
-	showtime,err:=s.showtimeRepo.Get_showtime(id)
+func(s *showtimeService)DeleteShowTime (id int64)error{
+	showtime,err:=s.showtimeRepo.GetShowTime(id)
 	if err!=nil{
 		return err
 	}
 
-	if err:=s.showtimeRepo.Delete_showtime(showtime.ID);err!=nil{
+	if err:=s.showtimeRepo.DeleteShowTime(showtime.ID);err!=nil{
 		return err
 	}
 	return nil
 }
 
 
-func(s *showtimeService)Update_showtime(id int64,req *presenters.UpdateShowTimeReq)error{
+func(s *showtimeService)UpdateShowTime(id int64,req *presenters.UpdateShowTimeReq)error{
 	
-	existingShowtime,err:=s.showtimeRepo.Get_showtime(id)
+	existingShowtime,err:=s.showtimeRepo.GetShowTime(id)
 	if err!=nil{
 		return err
 	}
@@ -89,7 +84,7 @@ func(s *showtimeService)Update_showtime(id int64,req *presenters.UpdateShowTimeR
 		return err
 	}
 	if hasconflict{
-		return errors.New("hall is already booked at this time slot")
+		return apperrors.ErrHallAlreadyBooked
 	}
 
 	if req.HallNumber!=nil{
@@ -99,5 +94,5 @@ func(s *showtimeService)Update_showtime(id int64,req *presenters.UpdateShowTimeR
 		existingShowtime.ShowTime=*req.ShowTime
 	}
 
-	return s.showtimeRepo.Update_showtime(existingShowtime)
+	return s.showtimeRepo.UpdateShowTime(existingShowtime)
 }

@@ -12,13 +12,13 @@ type showtimeRepo struct {
 	db *gorm.DB
 }
 
-func NewShowTimeRepo(db *gorm.DB)repository.ShowTime{
+func NewShowTimeRepo(db *gorm.DB)repository.ShowTimeRepository{
 	return &showtimeRepo{
 		db:db,
 	}
 }
 
-func(r *showtimeRepo)Create_ShowTime(showtime *models.ShowTime) error{
+func(r *showtimeRepo)CreateShowTime(showtime *models.ShowTime) error{
 	result:=r.db.Create(&showtime)
 	if result.Error!=nil{
 		return result.Error
@@ -26,7 +26,7 @@ func(r *showtimeRepo)Create_ShowTime(showtime *models.ShowTime) error{
 	return nil
 }
 
-func(r *showtimeRepo)Get_showtimes()(showtimes []models.ShowTime,err error){
+func(r *showtimeRepo)GetAll()(showtimes []models.ShowTime,err error){
 	result:=r.db.Preload("Movie").Find(&showtimes)
 	if result.Error!=nil{
 		return nil,result.Error
@@ -34,7 +34,7 @@ func(r *showtimeRepo)Get_showtimes()(showtimes []models.ShowTime,err error){
 	return showtimes,nil
 }
 
-func(r *showtimeRepo)Get_showtime(id int64)(showtime *models.ShowTime,err error){
+func(r *showtimeRepo)GetShowTime(id int64)(showtime *models.ShowTime,err error){
 	result:=r.db.Where("id=?",id).Preload("Movie").First(&showtime)
 	if result.Error!=nil{
 		return nil,result.Error
@@ -42,7 +42,7 @@ func(r *showtimeRepo)Get_showtime(id int64)(showtime *models.ShowTime,err error)
 	return showtime,nil
 }
 
-func(r *showtimeRepo)Delete_showtime (id int64)error{
+func(r *showtimeRepo)DeleteShowTime (id int64)error{
 	result:=r.db.Delete(&models.ShowTime{},id)
 	if result.Error!=nil{
 		return result.Error
@@ -60,7 +60,7 @@ func(r *showtimeRepo)CheckHallConflict(hallnumber int,showtime time.Time,exludeI
 	return count >0,nil
 }
 
-func(r *showtimeRepo)Update_showtime(showtime *models.ShowTime)error{
+func(r *showtimeRepo)UpdateShowTime(showtime *models.ShowTime)error{
 	return r.db.Save(showtime).Error
 }
 

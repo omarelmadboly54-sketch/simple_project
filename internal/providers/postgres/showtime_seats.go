@@ -1,8 +1,8 @@
 package postgres
 
 import (
-	"errors"
 	"fmt"
+	"simple_project/internal/apperrors"
 	"simple_project/internal/models"
 	"simple_project/internal/repository"
 
@@ -14,13 +14,13 @@ type showtimeseatsRepo struct {
 }
 
 
-func NewShowTimeSeatRepo(db *gorm.DB) repository.ShowTimeSeatsRepo{
+func NewShowTimeSeatRepo(db *gorm.DB) repository.ShowTimeSeatsRepository {
 	return &showtimeseatsRepo{
 		db: db,
 	}
 }
 
-func(r *showtimeseatsRepo)GenerateSeatsForShowtime(showtimeID int64)error{
+func(r *showtimeseatsRepo)GenerateSeatsForShowTime(showtimeID int64)error{
 	rows:=[]string{"A","B","C","D","E"}
 	cols:=10
 
@@ -44,7 +44,7 @@ func(r *showtimeseatsRepo)GenerateSeatsForShowtime(showtimeID int64)error{
 }
 
 
-func(r *showtimeseatsRepo)Get_Seats(showtime_id int64) (seats []models.ShowtimeSeats,err error){
+func(r *showtimeseatsRepo)GetAll(showtime_id int64) (seats []models.ShowtimeSeats,err error){
 	result:=r.db.Where("showtime_id",showtime_id).Find(&seats)
 
 		if result.Error!=nil{
@@ -53,8 +53,21 @@ func(r *showtimeseatsRepo)Get_Seats(showtime_id int64) (seats []models.ShowtimeS
 		return seats,nil
 }
 
+func(r *showtimeseatsRepo)GetSeatById(seat_id int64,showtime_id int64) (seat *models.ShowtimeSeats, err error){
+	result:=r.db.Where("id=? AND showtime_id=?",seat_id,showtime_id).First(&seat)	
+	if result.Error!=nil{
+		if result.Error==gorm.ErrRecordNotFound{
+			return seat,apperrors.ErrSeatNotFound
+		}	
 
-func(r *showtimeseatsRepo)Book_seat(seat_id int64,user_id int64)error{
+		return seat,result.Error
+	}
+	return seat,nil
+}
+
+
+
+func(r *showtimeseatsRepo)BookSeat(seat_id int64,user_id int64)error{
 	result:=r.db.Model(&models.ShowtimeSeats{}).
 	Where("id=? AND status =?",seat_id,"available").
 	Updates(map[string]interface{}{
@@ -67,7 +80,7 @@ func(r *showtimeseatsRepo)Book_seat(seat_id int64,user_id int64)error{
 	}
 
 	if result.RowsAffected==0{
-		return errors.New("seat is already booked")
+		return apperrors.ErrSeatAlreadyBooked
 	}
 	return nil
 

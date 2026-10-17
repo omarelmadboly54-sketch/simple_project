@@ -20,7 +20,7 @@ func main() {
 	}
 	log.Println("Database Connection Successfully")
 
-	tokenMaker,err:=token.NewJwtMaker(config.SecretKey)
+	tokenMaker,err:=token.NewJWTMaker(config.SecretKey)
 	if err!=nil{
 		log.Fatal("failed to generate token maker:",err)
 	}
@@ -31,23 +31,23 @@ func main() {
 	tokenDuration:=time.Duration(config.AccessTokenMinutes)*time.Minute
 	userService:=service.NewUserService(userRepo,tokenMaker,tokenDuration)
 	userController:=controller.NewUserController(userService,tokenMaker)
-	userController.Routes(r.Group("/api"))
+	userController.RegisterRoutes(r.Group("/api"))
 //movies:
 	movieRepo:=postgres.NewMovieRepo(db)
-	movieService:=service.NewMovieService(movieRepo,tokenMaker,tokenDuration)
+	movieService:=service.NewMovieService(movieRepo)
 	movieController:=controller.NewMovieController(movieService,tokenMaker)
-	movieController.Routes(r.Group("/api"))
+	movieController.RegisterRoutes(r.Group("/api"))
 //showtime:
 	seatRepo:=postgres.NewShowTimeSeatRepo(db)
 	showtimeRepo:=postgres.NewShowTimeRepo(db)
-	showtimeService:=service.NewShowTimeService(showtimeRepo,seatRepo,tokenMaker,tokenDuration)
+	showtimeService:=service.NewShowTimeService(showtimeRepo,seatRepo)
 	showtimeController:=controller.NewShowtimeController(showtimeService,tokenMaker)
-	showtimeController.Routes(r.Group("/api"))
+	showtimeController.RegisterRoutes(r.Group("/api"))
 
 //showtime_seats:
-	seatService:=service.NewShowTimeSeatService(seatRepo,tokenMaker,tokenDuration)
+	seatService:=service.NewShowTimeSeatService(seatRepo)
 	seatController:=controller.NewShowTimeSeatContoller(seatService,tokenMaker)
-	seatController.Routes(r.Group("/api"))
+	seatController.RegisterRoutes(r.Group("/api"))
 
 	if err:=r.Run(config.ServerAddress);err!=nil{
 		log.Fatalf("failed to start server:%v",err)
